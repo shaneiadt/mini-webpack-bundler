@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const babylon = require('babylon')
 const traverse = require('babel-traverse').default
+const babel = require('@babel/core')
 
 let ID = 0
 
@@ -21,8 +22,12 @@ function createAsset(filename) {
 
     const id = ID++
 
+    const { code } = babel.transformFromAst(ast, null, {
+        presets: ['@babel/preset-env']
+    })
+
     return {
-        id, filename, dependencies
+        id, filename, dependencies, code
     }
 }
 
@@ -47,7 +52,27 @@ function createGraph(entry) {
     return queue
 }
 
+function bundle(graph) {
+    let modules = ``
+
+    graph.forEach(mod => {
+        modules += `${mod.id}: [
+            function(require, module, exports){ 
+                ${mod.code}
+            }
+        ],`
+    })
+
+    const result = `
+        (function(){
+
+        })({${modules}})
+    `
+
+    return result
+}
+
 const graph = createGraph('./entry.js')
+const result = bundle(graph)
 
-
-console.log(graph)
+console.log(result)
