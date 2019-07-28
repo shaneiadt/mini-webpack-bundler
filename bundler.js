@@ -2,6 +2,8 @@ const fs = require('fs')
 const babylon = require('babylon')
 const traverse = require('babel-traverse').default
 
+let ID = 0
+
 function createAsset(filename) {
     const content = fs.readFileSync(filename, 'utf-8')
     const ast = babylon.parse(content, {
@@ -16,8 +18,13 @@ function createAsset(filename) {
         }
     })
 
-    console.log(dependencies)
+    const id = ID++
 
+    return {
+        id, filename, dependencies
+    }
 }
 
-createAsset('./entry.js')
+const mainAsset = createAsset('./entry.js')
+
+console.log(mainAsset)
